@@ -1,11 +1,5 @@
 import db from "./db";
 
-type CreateHighlightArgs = {
-  feedbackId: number | bigint;
-  highlightSummary: string;
-  highlightQuote: string;
-}
-
 /**
  * Gets a feedback entry by its id
  * @param id The id of the feedback
@@ -29,16 +23,6 @@ const getFeedbackPage = async (page: number, perPage: number) => {
 }
 
 /**
- * Gets the highlights of a feedback entry
- * @param feedbackId The id of the feedback
- */
-const getFeedbackHighlights = async (feedbackId: number) => {
-  return db.prepare(`SELECT *
-                     FROM Highlight
-                     WHERE feedbackId = ?`).all(feedbackId)
-}
-
-/**
  * Counts the number of feedback entries
  * @returns The number of feedback entries
  */
@@ -59,16 +43,6 @@ const createFeedback = async (text: string) => {
   const result = db.prepare(`INSERT INTO Feedback (text)
                              VALUES (?)`).run(text);
   return {id: result.lastInsertRowid, text}
-}
-
-/**
- * Creates a new highlight entry
- * @param args The arguments to create a highlight
- */
-const createHighlight = async (args: CreateHighlightArgs) => {
-  const result = db.prepare(`INSERT INTO Highlight (quote, summary, feedbackId)
-                             VALUES (?, ?, ?)`).run(args.highlightSummary, args.highlightQuote, args.feedbackId);
-  return {id: result.lastInsertRowid, ...result}
 }
 
 export default {getFeedback, getFeedbackPage, createFeedback};

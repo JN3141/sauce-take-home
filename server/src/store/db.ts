@@ -1,9 +1,9 @@
-import Database from 'better-sqlite3';
+import Database from "better-sqlite3";
 
 /**
  * Schema for the database
  */
-const sqlSchema = `
+const sqlSchema = /* sql */ `
     CREATE TABLE IF NOT EXISTS Feedback
     (
         id   INTEGER PRIMARY KEY,

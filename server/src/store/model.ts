@@ -1,11 +1,11 @@
 export type Feedback = {
-  id: number;
+  id: number | bigint;
   text: string;
 }
 
 export type Highlight = {
-  id: number;
-  feedbackId: number;
+  id: number | bigint;
+  feedbackId: number | bigint;
   summary: string;
   quote: string;
 }

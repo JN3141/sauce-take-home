@@ -1,4 +1,6 @@
 import feedbackService from "../service/feedback";
+import highlightService from "../service/highlight";
+import { Feedback } from "../store/model";
 
 /**
  * GraphQL Resolvers
@@ -18,8 +20,8 @@ const resolvers = {
     },
   },
   Feedback: {
-    highlights: () => {
-      return [];
+    highlights: (parent: Feedback) => {
+      return highlightService.getFeedbackHighlights(parent.id);
     },
   },
 };

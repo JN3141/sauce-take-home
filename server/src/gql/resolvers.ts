@@ -1,4 +1,3 @@
-import feedbackStore from "../store/feedback";
 import feedbackService from "../service/feedback";
 
 /**
@@ -7,7 +6,7 @@ import feedbackService from "../service/feedback";
 const resolvers = {
   Query: {
     feedback: (parent: unknown, args: { id: number }) => {
-      return feedbackStore.getFeedback(args.id);
+      return feedbackService.getFeedback(args.id);
     },
     feedbacks: (parent: unknown, args: { page: number; per_page: number }) => {
       return feedbackService.getFeedbackPage(args.page, args.per_page);

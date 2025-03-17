@@ -26,9 +26,8 @@ const FeedbackItem = ({ queryRef }: Props) => {
   );
 
   return (
-    <div>
+    <div id={data.id}>
       <button
-        key={data?.id}
         className="bg-slate-700 bg-opacity-20 hover:bg-opacity-30 cursor-pointer rounded-lg py-2 px-4 text-left"
         onClick={() => setIsExpanded(!isExpanded)}
       >

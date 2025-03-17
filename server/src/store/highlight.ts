@@ -91,7 +91,7 @@ const getFeedbackHighlights = async (feedbackId: number | bigint) => {
                  FROM Highlight
                  WHERE feedbackId = ?`
     )
-    .all(feedbackId);
+    .all(feedbackId) as Highlight[];
 };
 
 export default {

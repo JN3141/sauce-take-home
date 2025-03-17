@@ -19,7 +19,7 @@ const createHighlight = async (
       /* sql */ `INSERT INTO Highlight (quote, summary, feedbackId)
                  VALUES (?, ?, ?)`
     )
-    .run(args.highlightSummary, args.highlightQuote, args.feedbackId);
+    .run(args.highlightQuote, args.highlightSummary, args.feedbackId);
 
   return {
     id: result.lastInsertRowid,

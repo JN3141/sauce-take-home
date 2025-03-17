@@ -2,6 +2,7 @@ import { usePaginationFragment } from "react-relay";
 import { graphql } from "relay-runtime";
 
 import { FeedbackItems$key } from "./__generated__/FeedbackItems.graphql";
+import FeedbackItem from "./FeedbackItem";
 
 type Props = {
   queryRef: FeedbackItems$key;
@@ -14,17 +15,13 @@ const FeedbackItems = ({ queryRef }: Props) => {
   const { data, loadNext, hasNext } = usePaginationFragment(
     graphql`
       fragment FeedbackItems on Query
-      @argumentDefinitions(
-        first: { type: "Int" }
-        after: { type: "String" }
-      )
+      @argumentDefinitions(first: { type: "Int" }, after: { type: "String" })
       @refetchable(queryName: "FeedbackItemsPaginationQuery") {
         feedbacks(first: $first, after: $after)
           @connection(key: "FeedbackItems_feedbacks") {
           edges {
             node {
-              id
-              text
+              ...FeedbackItem
             }
           }
           pageInfo {
@@ -43,14 +40,9 @@ const FeedbackItems = ({ queryRef }: Props) => {
 
   return (
     <>
-      {data.feedbacks.edges.map((feedback) => (
-        <button
-          key={feedback.node?.id}
-          className="bg-slate-700 bg-opacity-20 hover:bg-opacity-30 cursor-pointer rounded-lg py-2 px-4 text-left"
-        >
-          <p className="text-red-300">{feedback.node?.text}</p>
-        </button>
-      ))}
+      {data.feedbacks.edges.map((feedback) =>
+        feedback.node ? <FeedbackItem queryRef={feedback.node} /> : null
+      )}
       {hasNext && (
         <button
           onClick={() => loadNext(DEFAULT_PAGE_SIZE)}

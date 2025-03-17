@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<c9485c0e24a09c25697de1ec654c4ccd>>
+ * @generated SignedSource<<7a133c2572ab14cf71d5a2e3063f07f3>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -14,8 +14,7 @@ export type FeedbackItems$data = {
   readonly feedbacks: {
     readonly edges: ReadonlyArray<{
       readonly node: {
-        readonly id: string;
-        readonly text: string;
+        readonly " $fragmentSpreads": FragmentRefs<"FeedbackItem">;
       } | null | undefined;
     }>;
     readonly pageInfo: {
@@ -99,18 +98,9 @@ return {
               "plural": false,
               "selections": [
                 {
-                  "alias": null,
                   "args": null,
-                  "kind": "ScalarField",
-                  "name": "id",
-                  "storageKey": null
-                },
-                {
-                  "alias": null,
-                  "args": null,
-                  "kind": "ScalarField",
-                  "name": "text",
-                  "storageKey": null
+                  "kind": "FragmentSpread",
+                  "name": "FeedbackItem"
                 },
                 {
                   "alias": null,
@@ -166,6 +156,6 @@ return {
 };
 })();
 
-(node as any).hash = "961a2bbdfce77f04463a4b246a9ba720";
+(node as any).hash = "1e45788f3b36855f4c47bd9b02395657";
 
 export default node;

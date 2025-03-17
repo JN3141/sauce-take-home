@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<43e95a1baff181d91f9a99164050b2f8>>
+ * @generated SignedSource<<5058ce7b783a8975b8b05f621f3d582a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -44,7 +44,14 @@ v2 = [
     "name": "first",
     "variableName": "first"
   }
-];
+],
+v3 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "id",
+  "storageKey": null
+};
 return {
   "fragment": {
     "argumentDefinitions": [
@@ -97,18 +104,38 @@ return {
                 "name": "node",
                 "plural": false,
                 "selections": [
-                  {
-                    "alias": null,
-                    "args": null,
-                    "kind": "ScalarField",
-                    "name": "id",
-                    "storageKey": null
-                  },
+                  (v3/*: any*/),
                   {
                     "alias": null,
                     "args": null,
                     "kind": "ScalarField",
                     "name": "text",
+                    "storageKey": null
+                  },
+                  {
+                    "alias": null,
+                    "args": null,
+                    "concreteType": "Highlight",
+                    "kind": "LinkedField",
+                    "name": "highlights",
+                    "plural": true,
+                    "selections": [
+                      (v3/*: any*/),
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "quote",
+                        "storageKey": null
+                      },
+                      {
+                        "alias": null,
+                        "args": null,
+                        "kind": "ScalarField",
+                        "name": "summary",
+                        "storageKey": null
+                      }
+                    ],
                     "storageKey": null
                   },
                   {
@@ -171,12 +198,12 @@ return {
     ]
   },
   "params": {
-    "cacheID": "3befb98027c503d7904624bfc226b819",
+    "cacheID": "8c746aa3cee0bc1041094bddb32b7458",
     "id": null,
     "metadata": {},
     "name": "FeedbackListQuery",
     "operationKind": "query",
-    "text": "query FeedbackListQuery(\n  $first: Int\n  $after: String\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after) {\n    edges {\n      node {\n        id\n        text\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query FeedbackListQuery(\n  $first: Int\n  $after: String\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItem on Feedback {\n  id\n  text\n  highlights {\n    id\n    quote\n    summary\n  }\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after) {\n    edges {\n      node {\n        ...FeedbackItem\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();

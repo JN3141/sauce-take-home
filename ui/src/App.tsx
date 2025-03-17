@@ -1,4 +1,4 @@
-import FeedbackList from "./feedback/feedback-list.tsx";
+import FeedbackList from "./feedback/FeedbackList.tsx";
 
 function App() {
 

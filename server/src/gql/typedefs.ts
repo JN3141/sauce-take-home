@@ -2,23 +2,37 @@
  * GraphQL type definitions
  */
 const typeDefs = /* GraphQL */ `
+  interface Node {
+    id: ID!
+  }
+
+  """
+  Common pagination metadata
+  """
+  type PageInfo {
+    hasPreviousPage: Boolean!
+    hasNextPage: Boolean!
+    startCursor: String
+    endCursor: String
+  }
+
   type Query {
-    feedback(id: Int!): Feedback
-    feedbacks(page: Int!, per_page: Int!): FeedbackPage!
+    feedback(id: ID!): Feedback
+    feedbacks(first: Int, after: String): FeedbackConnection
   }
 
   type Mutation {
     createFeedback(text: String!): Feedback!
   }
 
-  type Feedback {
-    id: Int!
+  type Feedback implements Node {
+    id: ID!
     text: String!
     highlights: [Highlight!]
   }
 
-  type Highlight {
-    id: Int!
+  type Highlight implements Node {
+    id: ID!
     quote: String!
     summary: String!
   }
@@ -26,6 +40,20 @@ const typeDefs = /* GraphQL */ `
   type FeedbackPage {
     values: [Feedback!]!
     count: Int!
+  }
+
+  type FeedbackConnection {
+    edges: [FeedbackEdge!]!
+    pageInfo: PageInfo!
+  }
+
+  """
+  The edge contains the actual item as the "node", alongside metadata; default
+  is to just include the cursor metadata
+  """
+  type FeedbackEdge {
+    node: Feedback
+    cursor: String!
   }
 `;
 

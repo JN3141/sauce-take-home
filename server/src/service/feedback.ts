@@ -40,7 +40,7 @@ const createFeedback = async (text: string) => {
  * Gets a feedback entry by its id
  * @param id The id of the feedback
  */
-const getFeedback = async (id: number) => {
+const getFeedback = async (id: number | bigint) => {
   return feedbackStore.getFeedback(id);
 }
 
@@ -49,10 +49,8 @@ const getFeedback = async (id: number) => {
  * @param page The page number
  * @param perPage The number of entries per page
  */
-const getFeedbackPage = async (page: number, perPage: number) => {
-  const values = await feedbackStore.getFeedbackPage(page, perPage);
-  const count = values.length;
-  return { values, count };
+const getFeedbackPage = async (first: number, after?: number) => {
+  return await feedbackStore.getFeedbackPage(first, after);
 };
 
 export default {

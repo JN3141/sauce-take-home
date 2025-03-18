@@ -1,0 +1,8 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - 4566:4566
+    volumes:
+      # map in the setup script
+      - ./localstack-setup.sh:/etc/localstack/init/ready.d/script.sh

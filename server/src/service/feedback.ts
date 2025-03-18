@@ -1,6 +1,5 @@
 import feedbackStore from "../store/feedback";
-import highlightService from "../service/highlight";
-import prompt from "../ai/prompt";
+import sqsService from "../service/sqs";
 
 /**
  * Creates a feedback entry and runs analysis on it.
@@ -8,30 +7,13 @@ import prompt from "../ai/prompt";
  */
 const createFeedback = async (text: string) => {
   const feedback = await feedbackStore.createFeedback(text);
-  // TODO: remove this hack to actually run the analysis; just for local dev-ing
-  // const analysisResult = await prompt.runFeedbackAnalysis(feedback.text);
-  const analysisResult = {
-    highlights: [
-      {
-        summary: "Merge Option RequestA",
-        quote:
-          "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
-      },
-      {
-        summary: "Merge Option RequestB",
-        quote:
-          "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
-      },
-    ],
-  };
 
-  await highlightService.createHighlights(
-    analysisResult.highlights.map((rawHighlight) => ({
-      highlightQuote: rawHighlight.quote,
-      highlightSummary: rawHighlight.summary,
-      feedbackId: feedback.id,
-    }))
-  );
+  await sqsService.sendMessageToEventQueue({
+    type: "FeedbackCreated",
+    payload: {
+      feedback: feedback,
+    },
+  });
 
   return feedback;
 };
@@ -42,7 +24,7 @@ const createFeedback = async (text: string) => {
  */
 const getFeedback = async (id: number | bigint) => {
   return feedbackStore.getFeedback(id);
-}
+};
 
 /**
  * Gets a page of feedback entries
@@ -57,4 +39,4 @@ export default {
   createFeedback,
   getFeedback,
   getFeedbackPage,
-}
+};

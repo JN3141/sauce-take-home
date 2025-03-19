@@ -1,8 +1,7 @@
-import {zodToJsonSchema} from "zod-to-json-schema";
-import openAIClient from "./client";
-import {v4} from "uuid";
-import {HighlightPromptResult, highlightPromptResultSchema} from "./models";
-
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { getOpenAIClient } from "./client";
+import { v4 } from "uuid";
+import { HighlightPromptResult, highlightPromptResultSchema } from "./models";
 
 /**
  * This function takes in a feedback string and returns the highlights of the feedback.
@@ -14,7 +13,9 @@ import {HighlightPromptResult, highlightPromptResultSchema} from "./models";
  *
  * @param feedback The feedback to analyze
  */
-const runFeedbackAnalysis = async (feedback: string): Promise<HighlightPromptResult> => {
+const runFeedbackAnalysis = async (
+  feedback: string
+): Promise<HighlightPromptResult> => {
   const promptId = v4();
 
   // Send OpenAI completion request and return the highlights
@@ -38,12 +39,14 @@ const runFeedbackAnalysis = async (feedback: string): Promise<HighlightPromptRes
   console.log(`+++++++ FEEDBACK ANALYSIS END ID (${promptId}) +++++++`);
   console.log();
 
-  const response = await openAIClient.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: "gpt-4-turbo-preview",
-    messages: [{
-      role: "user",
-      content: prompt
-    }],
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
   });
   if (!response.choices[0].message.content) {
     throw new Error("OpenAI did not return a message.");
@@ -63,8 +66,8 @@ const runFeedbackAnalysis = async (feedback: string): Promise<HighlightPromptRes
   console.log();
 
   return parsed.data;
-}
+};
 
 export default {
   runFeedbackAnalysis,
-}
+};

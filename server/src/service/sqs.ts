@@ -4,14 +4,16 @@ import { Feedback } from "../store/model";
 
 export const EVENT_QUEUE_URL = process.env.EVENT_QUEUE_URL ?? "";
 
-if (!EVENT_QUEUE_URL) {
-  throw new Error("Missing EVENT_QUEUE_URL environment variable");
-}
+const getSqsClient = () => {
+  if (!EVENT_QUEUE_URL) {
+    throw new Error("Missing EVENT_QUEUE_URL environment variable");
+  }
 
-const sqsClient = new SQSClient({
-  credentials: fromEnv(),
-  region: process.env.AWS_REGION,
-});
+  return new SQSClient({
+    credentials: fromEnv(),
+    region: process.env.AWS_REGION,
+  });
+};
 
 export const eventBusMessageTypes = ["FeedbackCreated"];
 export type EventBusMessageType = (typeof eventBusMessageTypes)[number];
@@ -65,7 +67,7 @@ const sendMessage = async (queueUrl: string, message: EventBusMessage) => {
     MessageBody: JSON.stringify(message),
   };
 
-  return await sqsClient.send(new SendMessageCommand(params));
+  return await getSqsClient().send(new SendMessageCommand(params));
 };
 
 const sendMessageToEventQueue = async (message: EventBusMessage) => {

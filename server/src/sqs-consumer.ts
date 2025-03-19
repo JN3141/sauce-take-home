@@ -28,22 +28,22 @@ const eventQueueConsumer = Consumer.create({
       const feedback = maybeEventBusMessage.payload.feedback;
 
       // TODO: put this into highlight service
-      // TODO: remove this hack to actually run the analysis; just for local dev-ing
-      // const analysisResult = await prompt.runFeedbackAnalysis(feedback.text);
-      const analysisResult = {
-        highlights: [
-          {
-            summary: "Merge Option RequestA",
-            quote:
-              "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
-          },
-          {
-            summary: "Merge Option RequestB",
-            quote:
-              "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
-          },
-        ],
-      };
+      const analysisResult = await prompt.runFeedbackAnalysis(feedback.text);
+      // TODO: clean up this hack; just for local dev-ing
+      // const analysisResult = {
+      //   highlights: [
+      //     {
+      //       summary: "Merge Option RequestA",
+      //       quote:
+      //         "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
+      //     },
+      //     {
+      //       summary: "Merge Option RequestB",
+      //       quote:
+      //         "A request for a 'merge' option to combine related issues, suggesting that merging can consolidate related feedback sourced from the same communication.",
+      //     },
+      //   ],
+      // };
 
       await highlightService.createHighlights(
         analysisResult.highlights.map((rawHighlight) => ({

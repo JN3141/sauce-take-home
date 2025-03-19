@@ -5,7 +5,8 @@
   "main": "main.ts",
   "scripts": {
     "dev": "dotenv -e .env -- cross-env NODE_ENV=development ts-node-dev --exit-child --respawn src/main.ts",
-    "start": "ts-node src/main.ts"
+    "start": "ts-node src/main.ts",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "jszklarz@sauce.app",
@@ -27,10 +28,13 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
     "@types/node": "20.11.19",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
     "cross-env": "7.0.3",
+    "supertest": "^7.0.0",
     "ts-node": "10.9.2",
     "ts-node-dev": "2.0.0",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "vitest": "^3.0.9"
   }
 }

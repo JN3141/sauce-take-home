@@ -1,8 +1,21 @@
-import request from "supertest";
-import { beforeAll, beforeEach, describe, expect, it, Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import "../../src/main";
 import feedbackService from "../../src/service/feedback";
 import { getOpenAIClient } from "../../src/ai/client";
+import db from "../../src/store/db";
+import { createYoga } from "graphql-yoga";
+import { schema } from "../../src/gql/schema";
+import { buildHTTPExecutor } from "@graphql-tools/executor-http";
+import { parse } from "graphql";
+import { sauceFromGlobalId } from "../../src/gql/utils";
+
+function assertSingleValue<TValue extends object>(
+  value: TValue | AsyncIterable<TValue>
+): asserts value is TValue {
+  if (Symbol.asyncIterator in value) {
+    throw new Error("Expected single value");
+  }
+}
 
 vi.mock("../../src/ai/client", () => ({
   getOpenAIClient: vi.fn(),
@@ -11,11 +24,45 @@ vi.mock("../../src/ai/client", () => ({
 const mockGetOpenAIClient = getOpenAIClient as Mock;
 
 describe("HighightQueryResolverE2E", () => {
-  const testQueryString = /* GraphQL */ `
-    query TestQueryString($first: Int, $after: String) {
-      feedbacks(first: $first, after: $after) {
-        edges {
-          node {
+  const yoga = createYoga({ schema });
+  const executor = buildHTTPExecutor({
+    fetch: yoga.fetch,
+  });
+
+  beforeEach(() => {
+    db.exec("DELETE FROM Highlight;");
+    db.exec("DELETE FROM Feedback;");
+
+    mockGetOpenAIClient.mockImplementation(() => ({
+      chat: {
+        completions: {
+          create: () =>
+            Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      highlights: [
+                        {
+                          quote: "Highlight quote",
+                          summary: "Highlight summary",
+                        },
+                      ],
+                    }),
+                  },
+                },
+              ],
+            }),
+        },
+      },
+    }));
+  });
+
+  it("should create a new feedback entry with async highlights", async () => {
+    const createResponse = await executor({
+      document: parse(/* GraphQL */ `
+        mutation CreateFeedback($text: String!) {
+          createFeedback(text: $text) {
             id
             text
             highlights {
@@ -24,100 +71,119 @@ describe("HighightQueryResolverE2E", () => {
               summary
             }
           }
-          cursor
         }
-        pageInfo {
-          hasNextPage
-          endCursor
+      `),
+      variables: { text: "Test feedback" },
+    });
+
+    assertSingleValue(createResponse);
+
+    const decodedGlobalId = sauceFromGlobalId(
+      createResponse.data.createFeedback.id
+    );
+    expect(decodedGlobalId.id).toBeGreaterThanOrEqual(1);
+    expect(decodedGlobalId.type).toBe("Feedback");
+
+    expect(createResponse.data.createFeedback.text).toBe("Test feedback");
+    expect(createResponse.data.createFeedback.highlights as any[]).toHaveLength(0);
+
+    await expect
+      .poll(async () => {
+        const response = await executor({
+          document: parse(/* GraphQL */ `
+            query Feedback($id: ID!) {
+              feedback(id: $id) {
+                id
+                text
+                highlights {
+                  id
+                  quote
+                  summary
+                }
+              }
+            }
+          `),
+          variables: { id: createResponse.data.createFeedback.id },
+        });
+
+        assertSingleValue(response);
+
+        return response.data.feedback.highlights;
+      })
+      .toSatisfy(
+        (highlights: any[]) =>
+          highlights.length === 1 &&
+          highlights[0].quote === "Highlight quote" &&
+          highlights[0].summary === "Highlight summary"
+      );
+  });
+
+  it("should return highlights correctly, with pagination", async () => {
+    const testQueryString = /* GraphQL */ `
+      query Feedbacks($first: Int, $after: String) {
+        feedbacks(first: $first, after: $after) {
+          edges {
+            node {
+              id
+              text
+              highlights {
+                id
+                quote
+                summary
+              }
+            }
+            cursor
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
         }
       }
-    }
-  `;
+    `;
 
-  beforeAll(async () => {
     await feedbackService.createFeedback("feedback A");
     await feedbackService.createFeedback("feedback B");
     await feedbackService.createFeedback("feedback C");
-  });
 
-  beforeEach(() => {
-    mockGetOpenAIClient.mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: () => Promise.resolve({
-            choices: [
-              {message: {
-                content: JSON.stringify({
-                  data: {
-                    highlights: [
-                      {
-                        quote: "Highlight quote",
-                        summary: "Highlight summary",
-                      },
-                    ],
-                  }
-                }),
-              }}
-            ]
-          }),
-        }
-      }
-    })
-  );
-});
-
-  it("should return created highlights", async () => {
-    const response = await request("http://localhost:4000")
-      .post("/graphql")
-      .send({
-        query: testQueryString,
-        variables: { first: 2 },
-      });
-
-    expect(response.body.data?.feedbacks?.edges).toHaveLength(2);
-    expect(response.body.data?.feedbacks?.edges[0].node?.text).toBe(
-      "feedback A"
-    );
-    expect(response.body.data?.feedbacks?.edges[1].node?.text).toBe(
-      "feedback B"
-    );
-
-    expect(response.body.data?.feedbacks?.pageInfo?.hasNextPage).toBe(true);
-
-    expect(response.body.data?.feedbacks?.pageInfo?.endCursor).toBe(
-      response.body.data?.feedbacks?.edges[1].cursor
-    );
-    expect(response.body.data?.feedbacks?.pageInfo?.endCursor).toBe(
-      response.body.data?.feedbacks?.edges[1].node.id
-    );
-  });
-
-  it("should paginate highlights correctly", async () => {
-    const responseA = await request("http://localhost:4000")
-      .post("/graphql")
-      .send({
-        query: testQueryString,
-        variables: { first: 2 },
-      });
-
-    const responseB = await request("http://localhost:4000")
-    .post("/graphql")
-    .send({
-      query: testQueryString,
-      variables: { first: 2, after: responseA.body.data?.feedbacks?.pageInfo?.endCursor },
+    const responseA = await executor({
+      document: parse(testQueryString),
+      variables: { first: 2 },
     });
 
-    expect(responseB.body.data?.feedbacks?.edges).toHaveLength(1);
-    expect(responseB.body.data?.feedbacks?.edges[0].node?.text).toBe(
-      "feedback C"
-    );
-    expect(responseB.body.data?.feedbacks?.pageInfo?.hasNextPage).toBe(false);
+    assertSingleValue(responseA);
 
-    expect(responseB.body.data?.feedbacks?.pageInfo?.endCursor).toBe(
-      responseB.body.data?.feedbacks?.edges[0].cursor
+    expect(responseA.data?.feedbacks?.edges).toHaveLength(2);
+    expect(responseA.data?.feedbacks?.edges[0].node?.text).toBe("feedback A");
+    expect(responseA.data?.feedbacks?.edges[1].node?.text).toBe("feedback B");
+
+    expect(responseA.data?.feedbacks?.pageInfo?.hasNextPage).toBe(true);
+    expect(responseA.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseA.data?.feedbacks?.edges[1].cursor
     );
-    expect(responseB.body.data?.feedbacks?.pageInfo?.endCursor).toBe(
-      responseB.body.data?.feedbacks?.edges[0].node.id
+    expect(responseA.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseA.data?.feedbacks?.edges[1].node.id
+    );
+
+    const responseB = await executor({
+      document: parse(testQueryString),
+      variables: {
+        first: 2,
+        after: responseA.data?.feedbacks?.pageInfo?.endCursor,
+      },
+    });
+
+    assertSingleValue(responseB);
+
+    expect(responseB.data?.feedbacks?.edges).toHaveLength(1);
+    expect(responseB.data?.feedbacks?.edges[0].node?.text).toBe("feedback C");
+
+    expect(responseB.data?.feedbacks?.pageInfo?.hasNextPage).toBe(false);
+    expect(responseB.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseB.data?.feedbacks?.edges[0].cursor
+    );
+    expect(responseB.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseB.data?.feedbacks?.edges[0].node.id
     );
   });
 });

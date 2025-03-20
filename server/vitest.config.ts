@@ -8,5 +8,6 @@ export default defineConfig(({ mode }) => ({
         ...loadEnv(mode, process.cwd(), ''),
         OPENAI_SECRET: "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
     },
+    environment: 'node', // or 'happy-dom' if you need DOM support
   },
 }))

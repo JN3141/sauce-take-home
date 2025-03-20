@@ -12,8 +12,9 @@ const MAX_FIRST = 50;
 /**
  * GraphQL Resolvers
  */
-const getFeedback = async (parent: unknown, args: { id: number }) => {
-  const feedback = await feedbackService.getFeedback(args.id);
+const getFeedback = async (parent: unknown, args: { id: string }) => {
+  const idValidated = sauceFromGlobalId(args.id);
+  const feedback = await feedbackService.getFeedback(idValidated.id);
   return {
     ...feedback,
     id: sauceToGlobalId("Feedback", feedback.id),

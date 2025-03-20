@@ -48,6 +48,9 @@ const runFeedbackAnalysis = async (
       },
     ],
   });
+
+  console.log('response is', response.choices[0])
+
   if (!response.choices[0].message.content) {
     throw new Error("OpenAI did not return a message.");
   }

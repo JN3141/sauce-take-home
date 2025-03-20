@@ -43,7 +43,7 @@ export const sauceFromGlobalId = (globalId: string) => {
 export const sauceToGlobalId = (type: GraphQLType, id: number | bigint) =>
   toGlobalId(type, id as number);
 
-export function connectionFromArrayWithDbIds<T extends { id: number }>(
+export function connectionFromArrayWithDbIds<T extends { id: number | bigint }>(
   data: Array<T>,
   nodeType: GraphQLType,
   args: ConnectionArguments

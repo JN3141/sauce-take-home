@@ -30,7 +30,7 @@ const createHighlight = async (
 };
 
 /**
- * Creates highlight entry
+ * Creates highlight entries
  * @param text The text of the highlight
  */
 const createHighlights = async (

@@ -11,6 +11,7 @@ const resolvers = {
   },
   Mutation: {
     createFeedback: feedbackResolvers.createFeedback,
+    createFeedbacks: feedbackResolvers.createFeedbacks,
   },
   Feedback: {
     highlights: highlightResolvers.getFeedbackHighlights,

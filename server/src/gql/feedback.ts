@@ -55,8 +55,17 @@ const createFeedback = async (parent: unknown, args: { text: string }) => {
   };
 };
 
+const createFeedbacks = async (parent: unknown, args: { texts: string[] }) => {
+  const createdFeedbacks = await feedbackService.createFeedbacks(args.texts);
+  return createdFeedbacks.map((feedback) => ({
+    ...feedback,
+    id: sauceToGlobalId("Feedback", feedback.id),
+  }));
+};
+
 export default {
   createFeedback,
+  createFeedbacks,
   getFeedback,
   getFeedbacks,
 };

@@ -29,6 +29,13 @@ describe("HighightQueryResolverE2E", () => {
     fetch: yoga.fetch,
   });
 
+  const mockHighlights = [
+    {
+      quote: "Highlight quote",
+      summary: "Highlight summary",
+    },
+  ];
+
   beforeEach(() => {
     db.exec("DELETE FROM Highlight;");
     db.exec("DELETE FROM Feedback;");
@@ -42,12 +49,7 @@ describe("HighightQueryResolverE2E", () => {
                 {
                   message: {
                     content: JSON.stringify({
-                      highlights: [
-                        {
-                          quote: "Highlight quote",
-                          summary: "Highlight summary",
-                        },
-                      ],
+                      highlights: mockHighlights,
                     }),
                   },
                 },
@@ -58,11 +60,11 @@ describe("HighightQueryResolverE2E", () => {
     }));
   });
 
-  it("should create a new feedback entry with async highlights", async () => {
-    const createResponse = await executor({
+  const pollForHighlights = async (feedbackId: string) => {
+    const response = await executor({
       document: parse(/* GraphQL */ `
-        mutation CreateFeedback($text: String!) {
-          createFeedback(text: $text) {
+        query Feedback($id: ID!) {
+          feedback(id: $id) {
             id
             text
             highlights {
@@ -73,7 +75,32 @@ describe("HighightQueryResolverE2E", () => {
           }
         }
       `),
-      variables: { text: "Test feedback" },
+      variables: { id: feedbackId },
+    });
+
+    assertSingleValue(response);
+
+    return response.data.feedback.highlights;
+  };
+
+  const isMockHighlights = (highlights: any[]) =>
+    highlights.length === 1 &&
+    highlights[0].quote === "Highlight quote" &&
+    highlights[0].summary === "Highlight summary";
+
+  it("should create a new feedback entry with async highlights", async () => {
+    const testFeedback = "Test feedback";
+
+    const createResponse = await executor({
+      document: parse(/* GraphQL */ `
+        mutation CreateFeedback($text: String!) {
+          createFeedback(text: $text) {
+            id
+            text
+          }
+        }
+      `),
+      variables: { text: testFeedback },
     });
 
     assertSingleValue(createResponse);
@@ -84,38 +111,60 @@ describe("HighightQueryResolverE2E", () => {
     expect(decodedGlobalId.id).toBeGreaterThanOrEqual(1);
     expect(decodedGlobalId.type).toBe("Feedback");
 
-    expect(createResponse.data.createFeedback.text).toBe("Test feedback");
-    expect(createResponse.data.createFeedback.highlights as any[]).toHaveLength(0);
+    expect(createResponse.data.createFeedback.text).toBe(testFeedback);
 
     await expect
-      .poll(async () => {
-        const response = await executor({
-          document: parse(/* GraphQL */ `
-            query Feedback($id: ID!) {
-              feedback(id: $id) {
-                id
-                text
-                highlights {
-                  id
-                  quote
-                  summary
-                }
-              }
+      .poll(async () =>
+        pollForHighlights(createResponse.data.createFeedback.id)
+      )
+      .toSatisfy(isMockHighlights);
+  });
+
+  it("should bulk create new feedback entries with async highlights", async () => {
+    const createResponse = await executor({
+      document: parse(/* GraphQL */ `
+        mutation CreateFeedbacks($texts: [String!]!) {
+          createFeedbacks(texts: $texts) {
+            id
+            text
+            highlights {
+              id
+              quote
+              summary
             }
-          `),
-          variables: { id: createResponse.data.createFeedback.id },
-        });
+          }
+        }
+      `),
+      variables: { texts: ["Test feedback A", "Test feedback B"] },
+    });
 
-        assertSingleValue(response);
+    assertSingleValue(createResponse);
 
-        return response.data.feedback.highlights;
-      })
-      .toSatisfy(
-        (highlights: any[]) =>
-          highlights.length === 1 &&
-          highlights[0].quote === "Highlight quote" &&
-          highlights[0].summary === "Highlight summary"
-      );
+    const decodedGlobalIdA = sauceFromGlobalId(
+      createResponse.data.createFeedbacks[0].id
+    );
+    expect(decodedGlobalIdA.id).toBeGreaterThanOrEqual(1);
+    expect(decodedGlobalIdA.type).toBe("Feedback");
+    expect(createResponse.data.createFeedbacks[0].text).toBe("Test feedback A");
+
+    const decodedGlobalIdB = sauceFromGlobalId(
+      createResponse.data.createFeedbacks[1].id
+    );
+    expect(decodedGlobalIdB.id).toBeGreaterThanOrEqual(1);
+    expect(decodedGlobalIdB.type).toBe("Feedback");
+    expect(createResponse.data.createFeedbacks[1].text).toBe("Test feedback B");
+
+    await expect
+      .poll(async () =>
+        pollForHighlights(createResponse.data.createFeedbacks[0].id)
+      )
+      .toSatisfy(isMockHighlights);
+
+    await expect
+      .poll(async () =>
+        pollForHighlights(createResponse.data.createFeedbacks[1].id)
+      )
+      .toSatisfy(isMockHighlights);
   });
 
   it("should return highlights correctly, with pagination", async () => {

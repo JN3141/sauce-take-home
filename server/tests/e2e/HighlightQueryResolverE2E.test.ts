@@ -31,8 +31,12 @@ describe("HighightQueryResolverE2E", () => {
 
   const mockHighlights = [
     {
-      quote: "Highlight quote",
-      summary: "Highlight summary",
+      quote: "Highlight quote A",
+      summary: "Highlight summary A",
+    },
+    {
+      quote: "Highlight quote B",
+      summary: "Highlight summary B",
     },
   ];
 
@@ -84,9 +88,11 @@ describe("HighightQueryResolverE2E", () => {
   };
 
   const isMockHighlights = (highlights: any[]) =>
-    highlights.length === 1 &&
-    highlights[0].quote === "Highlight quote" &&
-    highlights[0].summary === "Highlight summary";
+    highlights.length === 2 &&
+    highlights[0].quote === "Highlight quote A" &&
+    highlights[0].summary === "Highlight summary A" &&
+    highlights[1].quote === "Highlight quote B" &&
+    highlights[1].summary === "Highlight summary B";
 
   it("should create a new feedback entry with async highlights", async () => {
     const testFeedback = "Test feedback";

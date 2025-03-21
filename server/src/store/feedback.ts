@@ -20,7 +20,7 @@ const getFeedback = async (id: number | bigint) => {
  * @param page The page number
  * @param perPage The number of entries per page
  */
-const getFeedbackPage = async (first: number, after?: number) => {
+const getFeedbackPage = async (first: number, after?: number | bigint) => {
   return db
     .prepare(
       /* sql */ `SELECT *

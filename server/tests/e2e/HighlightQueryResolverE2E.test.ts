@@ -7,7 +7,7 @@ import { createYoga } from "graphql-yoga";
 import { schema } from "../../src/gql/schema";
 import { buildHTTPExecutor } from "@graphql-tools/executor-http";
 import { parse } from "graphql";
-import { sauceFromGlobalId } from "../../src/gql/utils";
+import { sauceFromGlobalIdOrThrow } from "../../src/gql/models";
 
 function assertSingleValue<TValue extends object>(
   value: TValue | AsyncIterable<TValue>
@@ -111,11 +111,7 @@ describe("HighightQueryResolverE2E", () => {
 
     assertSingleValue(createResponse);
 
-    const decodedGlobalId = sauceFromGlobalId(
-      createResponse.data.createFeedback.id
-    );
-    expect(decodedGlobalId.id).toBeGreaterThanOrEqual(1);
-    expect(decodedGlobalId.type).toBe("Feedback");
+    sauceFromGlobalIdOrThrow(createResponse.data.createFeedback.id, "Feedback");
 
     expect(createResponse.data.createFeedback.text).toBe(testFeedback);
 
@@ -146,18 +142,10 @@ describe("HighightQueryResolverE2E", () => {
 
     assertSingleValue(createResponse);
 
-    const decodedGlobalIdA = sauceFromGlobalId(
-      createResponse.data.createFeedbacks[0].id
-    );
-    expect(decodedGlobalIdA.id).toBeGreaterThanOrEqual(1);
-    expect(decodedGlobalIdA.type).toBe("Feedback");
+    sauceFromGlobalIdOrThrow(createResponse.data.createFeedbacks[0].id, "Feedback");
     expect(createResponse.data.createFeedbacks[0].text).toBe("Test feedback A");
 
-    const decodedGlobalIdB = sauceFromGlobalId(
-      createResponse.data.createFeedbacks[1].id
-    );
-    expect(decodedGlobalIdB.id).toBeGreaterThanOrEqual(1);
-    expect(decodedGlobalIdB.type).toBe("Feedback");
+    sauceFromGlobalIdOrThrow(createResponse.data.createFeedbacks[1].id, "Feedback");
     expect(createResponse.data.createFeedbacks[1].text).toBe("Test feedback B");
 
     await expect

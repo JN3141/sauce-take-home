@@ -1,19 +1,26 @@
+import { z } from "zod";
 import feedbackService from "../service/feedback";
 import {
-  sauceToGlobalId,
-  sauceFromGlobalId,
   FIRST_SENTINEL,
   connectionFromArrayWithDbIds,
   DEFAULT_FIRST,
-} from "./utils";
+  firstSchema,
+  type FirstType,
+  type AfterType,
+} from "./pagination";
+import {
+  sauceToGlobalId,
+  sauceFromGlobalIdOrThrow
+} from "./models";
 
-const MAX_FIRST = 50;
+const feedbackTextSchema = z.string().nonempty();
+type FeedbackText = z.infer<typeof feedbackTextSchema>;
 
 /**
  * GraphQL Resolvers
  */
 const getFeedback = async (parent: unknown, args: { id: string }) => {
-  const idValidated = sauceFromGlobalId(args.id);
+  const idValidated = sauceFromGlobalIdOrThrow(args.id, "Feedback");
   const feedback = await feedbackService.getFeedback(idValidated.id);
   return {
     ...feedback,
@@ -23,21 +30,12 @@ const getFeedback = async (parent: unknown, args: { id: string }) => {
 
 const getFeedbacks = async (
   parent: unknown,
-  args: { first: number | null; after: string | null }
+  args: { first: FirstType; after: AfterType }
 ) => {
-  if (args.first && args.first > MAX_FIRST) {
-    throw new Error("First argument exceeds maximum.");
-  }
-
-  const firstValidated = Math.min(args.first ?? DEFAULT_FIRST, MAX_FIRST);
-
-  const afterValidated = args.after ? sauceFromGlobalId(args.after) : undefined;
-
-  if (afterValidated) {
-    if (afterValidated.type !== "Feedback") {
-      throw new Error("Invalid after global ID.");
-    }
-  }
+  const firstValidated = firstSchema.parse(args.first) ?? DEFAULT_FIRST;
+  const afterValidated = args.after
+    ? sauceFromGlobalIdOrThrow(args.after, "Feedback")
+    : undefined;
 
   const feedbacks = await feedbackService.getFeedbackPage(
     firstValidated + FIRST_SENTINEL,
@@ -47,16 +45,29 @@ const getFeedbacks = async (
   return connectionFromArrayWithDbIds(feedbacks, "Feedback", args);
 };
 
-const createFeedback = async (parent: unknown, args: { text: string }) => {
-  const createdFeedback = await feedbackService.createFeedback(args.text);
+const createFeedback = async (
+  parent: unknown,
+  args: { text: FeedbackText }
+) => {
+  const validatedText = feedbackTextSchema.parse(args.text);
+
+  const createdFeedback = await feedbackService.createFeedback(validatedText);
   return {
     ...createdFeedback,
     id: sauceToGlobalId("Feedback", createdFeedback.id),
   };
 };
 
-const createFeedbacks = async (parent: unknown, args: { texts: string[] }) => {
-  const createdFeedbacks = await feedbackService.createFeedbacks(args.texts);
+const createFeedbacks = async (
+  parent: unknown,
+  args: { texts: FeedbackText[] }
+) => {
+  const validatedTexts = args.texts.map((text) =>
+    feedbackTextSchema.parse(text)
+  );
+  const createdFeedbacks = await feedbackService.createFeedbacks(
+    validatedTexts
+  );
   return createdFeedbacks.map((feedback) => ({
     ...feedback,
     id: sauceToGlobalId("Feedback", feedback.id),

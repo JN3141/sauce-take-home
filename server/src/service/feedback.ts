@@ -8,14 +8,23 @@ import db from "../store/db";
  * @param text The feedback to create
  */
 const createFeedback = async (text: string) => {
-  const feedback = await feedbackStore.createFeedback(text);
-
-  await sqsService.sendMessageToEventQueue({
-    type: "FeedbackCreated",
-    payload: {
-      feedback: feedback,
-    },
+  let feedback: Feedback | undefined;
+  const insertFeedback = db.transaction(async (text: string) => {
+    feedback = await feedbackStore.createFeedback(text);
+    // Send event to SQS during the transaction, so if it fails to send to SQS, the transaction will be rolled back
+    await sqsService.sendMessageToEventQueue({
+      type: "FeedbackCreated",
+      payload: {
+        feedback,
+      },
+    });
   });
+
+  await insertFeedback(text);
+
+  if (!feedback) {
+    throw new Error("Failed to create feedback");
+  }
 
   return feedback;
 };
@@ -26,22 +35,19 @@ const createFeedback = async (text: string) => {
  */
 const createFeedbacks = async (texts: string[]) => {
   const savedFeedbacks: Feedback[] = [];
-  const insertMultipleFeedbacks = db.transaction(
-    async (texts: string[]) => {
-      for (const text of texts) {
-        savedFeedbacks.push(await feedbackStore.createFeedback(text));
-      }
-
-      for (const feedback of savedFeedbacks) {
-        await sqsService.sendMessageToEventQueue({
-          type: "FeedbackCreated",
-          payload: {
-            feedback: feedback,
-          },
-        });
-      }
+  const insertMultipleFeedbacks = db.transaction(async (texts: string[]) => {
+    for (const text of texts) {
+      savedFeedbacks.push(await feedbackStore.createFeedback(text));
     }
-  );
+
+    // Send event to SQS during the transaction, so if it fails to send to SQS, the transaction will be rolled back
+    await sqsService.sendMessageToEventQueue({
+      type: "BulkFeedbackCreated",
+      payload: {
+        feedbacks: savedFeedbacks,
+      },
+    });
+  });
 
   await insertMultipleFeedbacks(texts);
 
@@ -61,7 +67,7 @@ const getFeedback = async (id: number | bigint) => {
  * @param page The page number
  * @param perPage The number of entries per page
  */
-const getFeedbackPage = async (first: number, after?: number) => {
+const getFeedbackPage = async (first: number, after?: number | bigint) => {
   return await feedbackStore.getFeedbackPage(first, after);
 };
 

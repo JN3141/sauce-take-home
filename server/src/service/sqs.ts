@@ -1,6 +1,6 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { fromEnv } from "@aws-sdk/credential-providers";
-import { Feedback } from "../store/model";
+import { Feedback, isFeedback } from "../store/model";
 
 export const EVENT_QUEUE_URL = process.env.EVENT_QUEUE_URL ?? "";
 
@@ -15,18 +15,22 @@ const getSqsClient = () => {
   });
 };
 
-export const eventBusMessageTypes = ["FeedbackCreated"];
+export const eventBusMessageTypes = ["BulkFeedbackCreated", "FeedbackCreated"];
 export type EventBusMessageType = (typeof eventBusMessageTypes)[number];
 
-export type EventBusMessage = {
-  type: EventBusMessageType;
-  payload: unknown;
-};
+export type EventBusMessage = FeedbackCreatedMessage | BulkFeedbackCreatedMessage;
 
 type FeedbackCreatedMessage = {
   type: "FeedbackCreated";
   payload: {
     feedback: Feedback;
+  };
+};
+
+type BulkFeedbackCreatedMessage = {
+  type: "BulkFeedbackCreated";
+  payload: {
+    feedbacks: Feedback[];
   };
 };
 
@@ -38,7 +42,10 @@ const isEventBusMessage = (
     maybeMessage !== null &&
     "type" in maybeMessage &&
     typeof maybeMessage.type === "string" &&
-    eventBusMessageTypes.includes(maybeMessage.type)
+    eventBusMessageTypes.includes(maybeMessage.type) &&
+    "payload" in maybeMessage &&
+    typeof maybeMessage.payload === "object" &&
+    maybeMessage.payload !== null
   );
 };
 
@@ -48,16 +55,22 @@ const isFeedbackCreatedMessage = (
   return (
     isEventBusMessage(maybeFeedbackCreatedMessage) &&
     maybeFeedbackCreatedMessage.type === "FeedbackCreated" &&
-    "payload" in maybeFeedbackCreatedMessage &&
-    typeof maybeFeedbackCreatedMessage.payload === "object" &&
-    maybeFeedbackCreatedMessage.payload !== null &&
     "feedback" in maybeFeedbackCreatedMessage.payload &&
-    typeof maybeFeedbackCreatedMessage.payload.feedback === "object" &&
-    maybeFeedbackCreatedMessage.payload.feedback !== null &&
-    "id" in maybeFeedbackCreatedMessage.payload.feedback &&
-    typeof maybeFeedbackCreatedMessage.payload.feedback.id === "number" &&
-    "text" in maybeFeedbackCreatedMessage.payload.feedback &&
-    typeof maybeFeedbackCreatedMessage.payload.feedback.text === "string"
+    isFeedback(maybeFeedbackCreatedMessage.payload.feedback)
+  );
+};
+
+const isBulkFeedbackCreatedMessage = (
+  maybeBulkFeedbackCreatedMessage: unknown
+): maybeBulkFeedbackCreatedMessage is BulkFeedbackCreatedMessage => {
+  return (
+    isEventBusMessage(maybeBulkFeedbackCreatedMessage) &&
+    maybeBulkFeedbackCreatedMessage.type === "BulkFeedbackCreated" &&
+    "feedbacks" in maybeBulkFeedbackCreatedMessage.payload &&
+    Array.isArray(maybeBulkFeedbackCreatedMessage.payload.feedbacks) &&
+    maybeBulkFeedbackCreatedMessage.payload.feedbacks.every((feedback) =>
+      isFeedback(feedback)
+    )
   );
 };
 
@@ -75,6 +88,7 @@ const sendMessageToEventQueue = async (message: EventBusMessage) => {
 };
 
 export default {
+  isBulkFeedbackCreatedMessage,
   isEventBusMessage,
   isFeedbackCreatedMessage,
   sendMessageToEventQueue,

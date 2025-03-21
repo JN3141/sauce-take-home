@@ -1,51 +1,21 @@
 import {
-  fromGlobalId,
-  toGlobalId,
   type ConnectionArguments,
   type Connection,
 } from "graphql-relay";
+import { SauceGraphQLType, sauceToGlobalId } from "./models";
+import { z } from "zod";
 
 export const DEFAULT_FIRST = 10;
 export const FIRST_SENTINEL = 1;
 
-export const graphQLTypes = ["Feedback", "Highlight"] as const;
-export type GraphQLType = (typeof graphQLTypes)[number];
-
-export type GraphQLNode = { id: string };
-
-function isGraphQLType(
-  maybeGraphQLType: unknown
-): maybeGraphQLType is GraphQLType {
-  return (
-    typeof maybeGraphQLType === "string" &&
-    graphQLTypes.some((graphQLType) => maybeGraphQLType === graphQLType)
-  );
-}
-
-export const sauceFromGlobalId = (globalId: string) => {
-  const maybeGlobalId = fromGlobalId(globalId);
-
-  if (!isGraphQLType(maybeGlobalId.type)) {
-    throw new Error("Invalid global ID.");
-  }
-
-  const maybeInt = parseInt(maybeGlobalId.id);
-  if (Number.isNaN(maybeInt)) {
-    throw new Error("Invalid global ID.");
-  }
-
-  return {
-    id: maybeInt,
-    type: maybeGlobalId.type,
-  };
-};
-
-export const sauceToGlobalId = (type: GraphQLType, id: number | bigint) =>
-  toGlobalId(type, id as number);
-
+export const firstSchema = z.number().int().min(1).max(50).nullish();
+export type FirstType = z.infer<typeof firstSchema>;
+export const afterSchema = z.string().nonempty().nullish();
+export type AfterType = z.infer<typeof afterSchema>;
+  
 export function connectionFromArrayWithDbIds<T extends { id: number | bigint }>(
   data: Array<T>,
-  nodeType: GraphQLType,
+  nodeType: SauceGraphQLType,
   args: ConnectionArguments
 ): Connection<T> {
   // Get the limit from args

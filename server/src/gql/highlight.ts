@@ -1,8 +1,8 @@
 import highlightService from "../service/highlight";
-import { GraphQLNode, sauceFromGlobalId, sauceToGlobalId } from "./utils";
+import { GraphQLNode, sauceFromGlobalIdOrThrow, sauceToGlobalId } from "./models";
 
 const getFeedbackHighlights = async (parent: GraphQLNode) => {
-  const parentDbId = sauceFromGlobalId(parent.id)
+  const parentDbId = sauceFromGlobalIdOrThrow(parent.id, "Feedback");
   const feedbackHighlights = await highlightService.getFeedbackHighlights(parentDbId.id);
   return feedbackHighlights.map((highlight) => ({
     ...highlight,

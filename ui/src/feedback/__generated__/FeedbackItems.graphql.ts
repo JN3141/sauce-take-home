@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<7a133c2572ab14cf71d5a2e3063f07f3>>
+ * @generated SignedSource<<e5c501db2a5cd31acd03f3eb15c71313>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -75,7 +75,16 @@ return {
   "selections": [
     {
       "alias": "feedbacks",
-      "args": null,
+      "args": [
+        {
+          "kind": "Literal",
+          "name": "sort",
+          "value": {
+            "direction": "DESC",
+            "field": "id"
+          }
+        }
+      ],
       "concreteType": "FeedbackConnection",
       "kind": "LinkedField",
       "name": "__FeedbackItems_feedbacks_connection",
@@ -148,7 +157,7 @@ return {
           "storageKey": null
         }
       ],
-      "storageKey": null
+      "storageKey": "__FeedbackItems_feedbacks_connection(sort:{\"direction\":\"DESC\",\"field\":\"id\"})"
     }
   ],
   "type": "Query",
@@ -156,6 +165,6 @@ return {
 };
 })();
 
-(node as any).hash = "1e45788f3b36855f4c47bd9b02395657";
+(node as any).hash = "c8ff5d38fa4ab327c8b5c5cbde1946cb";
 
 export default node;

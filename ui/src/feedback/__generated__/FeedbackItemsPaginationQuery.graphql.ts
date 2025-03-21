@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<b74f7164b4ee8c80f712331570f6e124>>
+ * @generated SignedSource<<d2932a93b4cf5f7cd4c4716ea89d1ae6>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -35,19 +35,29 @@ var v0 = [
     "name": "first"
   }
 ],
-v1 = [
+v1 = {
+  "kind": "Variable",
+  "name": "after",
+  "variableName": "after"
+},
+v2 = {
+  "kind": "Variable",
+  "name": "first",
+  "variableName": "first"
+},
+v3 = [
+  (v1/*: any*/),
+  (v2/*: any*/),
   {
-    "kind": "Variable",
-    "name": "after",
-    "variableName": "after"
-  },
-  {
-    "kind": "Variable",
-    "name": "first",
-    "variableName": "first"
+    "kind": "Literal",
+    "name": "sort",
+    "value": {
+      "direction": "DESC",
+      "field": "id"
+    }
   }
 ],
-v2 = {
+v4 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
@@ -62,7 +72,10 @@ return {
     "name": "FeedbackItemsPaginationQuery",
     "selections": [
       {
-        "args": (v1/*: any*/),
+        "args": [
+          (v1/*: any*/),
+          (v2/*: any*/)
+        ],
         "kind": "FragmentSpread",
         "name": "FeedbackItems"
       }
@@ -78,7 +91,7 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": (v1/*: any*/),
+        "args": (v3/*: any*/),
         "concreteType": "FeedbackConnection",
         "kind": "LinkedField",
         "name": "feedbacks",
@@ -100,7 +113,7 @@ return {
                 "name": "node",
                 "plural": false,
                 "selections": [
-                  (v2/*: any*/),
+                  (v4/*: any*/),
                   {
                     "alias": null,
                     "args": null,
@@ -116,7 +129,7 @@ return {
                     "name": "highlights",
                     "plural": true,
                     "selections": [
-                      (v2/*: any*/),
+                      (v4/*: any*/),
                       {
                         "alias": null,
                         "args": null,
@@ -184,8 +197,10 @@ return {
       },
       {
         "alias": null,
-        "args": (v1/*: any*/),
-        "filters": null,
+        "args": (v3/*: any*/),
+        "filters": [
+          "sort"
+        ],
         "handle": "connection",
         "key": "FeedbackItems_feedbacks",
         "kind": "LinkedHandle",
@@ -194,16 +209,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "dd4ec02db21a37c32636aca944db9969",
+    "cacheID": "338c820f81a0faf32e94b514ae1a41d3",
     "id": null,
     "metadata": {},
     "name": "FeedbackItemsPaginationQuery",
     "operationKind": "query",
-    "text": "query FeedbackItemsPaginationQuery(\n  $after: String\n  $first: Int\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItem on Feedback {\n  id\n  text\n  highlights {\n    id\n    quote\n    summary\n  }\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after) {\n    edges {\n      node {\n        ...FeedbackItem\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query FeedbackItemsPaginationQuery(\n  $after: String\n  $first: Int\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItem on Feedback {\n  id\n  text\n  highlights {\n    id\n    quote\n    summary\n  }\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after, sort: {field: \"id\", direction: DESC}) {\n    edges {\n      node {\n        ...FeedbackItem\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "1e45788f3b36855f4c47bd9b02395657";
+(node as any).hash = "c8ff5d38fa4ab327c8b5c5cbde1946cb";
 
 export default node;

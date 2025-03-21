@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<5058ce7b783a8975b8b05f621f3d582a>>
+ * @generated SignedSource<<18c980fd44a09a5c9f289a1c348c3cff>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -33,19 +33,29 @@ v1 = {
   "kind": "LocalArgument",
   "name": "first"
 },
-v2 = [
+v2 = {
+  "kind": "Variable",
+  "name": "after",
+  "variableName": "after"
+},
+v3 = {
+  "kind": "Variable",
+  "name": "first",
+  "variableName": "first"
+},
+v4 = [
+  (v2/*: any*/),
+  (v3/*: any*/),
   {
-    "kind": "Variable",
-    "name": "after",
-    "variableName": "after"
-  },
-  {
-    "kind": "Variable",
-    "name": "first",
-    "variableName": "first"
+    "kind": "Literal",
+    "name": "sort",
+    "value": {
+      "direction": "DESC",
+      "field": "id"
+    }
   }
 ],
-v3 = {
+v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
@@ -63,7 +73,10 @@ return {
     "name": "FeedbackListQuery",
     "selections": [
       {
-        "args": (v2/*: any*/),
+        "args": [
+          (v2/*: any*/),
+          (v3/*: any*/)
+        ],
         "kind": "FragmentSpread",
         "name": "FeedbackItems"
       }
@@ -82,7 +95,7 @@ return {
     "selections": [
       {
         "alias": null,
-        "args": (v2/*: any*/),
+        "args": (v4/*: any*/),
         "concreteType": "FeedbackConnection",
         "kind": "LinkedField",
         "name": "feedbacks",
@@ -104,7 +117,7 @@ return {
                 "name": "node",
                 "plural": false,
                 "selections": [
-                  (v3/*: any*/),
+                  (v5/*: any*/),
                   {
                     "alias": null,
                     "args": null,
@@ -120,7 +133,7 @@ return {
                     "name": "highlights",
                     "plural": true,
                     "selections": [
-                      (v3/*: any*/),
+                      (v5/*: any*/),
                       {
                         "alias": null,
                         "args": null,
@@ -188,8 +201,10 @@ return {
       },
       {
         "alias": null,
-        "args": (v2/*: any*/),
-        "filters": null,
+        "args": (v4/*: any*/),
+        "filters": [
+          "sort"
+        ],
         "handle": "connection",
         "key": "FeedbackItems_feedbacks",
         "kind": "LinkedHandle",
@@ -198,12 +213,12 @@ return {
     ]
   },
   "params": {
-    "cacheID": "8c746aa3cee0bc1041094bddb32b7458",
+    "cacheID": "9593f4b049a5eb3f8a0aa4de41a9381e",
     "id": null,
     "metadata": {},
     "name": "FeedbackListQuery",
     "operationKind": "query",
-    "text": "query FeedbackListQuery(\n  $first: Int\n  $after: String\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItem on Feedback {\n  id\n  text\n  highlights {\n    id\n    quote\n    summary\n  }\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after) {\n    edges {\n      node {\n        ...FeedbackItem\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
+    "text": "query FeedbackListQuery(\n  $first: Int\n  $after: String\n) {\n  ...FeedbackItems_2HEEH6\n}\n\nfragment FeedbackItem on Feedback {\n  id\n  text\n  highlights {\n    id\n    quote\n    summary\n  }\n}\n\nfragment FeedbackItems_2HEEH6 on Query {\n  feedbacks(first: $first, after: $after, sort: {field: \"id\", direction: DESC}) {\n    edges {\n      node {\n        ...FeedbackItem\n        id\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n"
   }
 };
 })();

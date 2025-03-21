@@ -10,14 +10,13 @@ type Props = {
 
 export const DEFAULT_PAGE_SIZE = 5;
 
-// TODO: make this reverse sort, so that you see the latest feedback first
 const FeedbackItems = ({ queryRef }: Props) => {
   const { data, loadNext, hasNext } = usePaginationFragment(
     graphql`
       fragment FeedbackItems on Query
       @argumentDefinitions(first: { type: "Int" }, after: { type: "String" })
       @refetchable(queryName: "FeedbackItemsPaginationQuery") {
-        feedbacks(first: $first, after: $after)
+        feedbacks(first: $first, after: $after, sort: { field: "id", direction: DESC })
           @connection(key: "FeedbackItems_feedbacks") {
           edges {
             node {

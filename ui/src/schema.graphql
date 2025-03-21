@@ -12,13 +12,24 @@ type PageInfo {
   endCursor: String
 }
 
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input SortInput {
+  field: String!
+  direction: SortDirection!
+}
+
 type Query {
   feedback(id: ID!): Feedback
-  feedbacks(first: Int, after: String): FeedbackConnection
+  feedbacks(first: Int, after: String, sort: SortInput): FeedbackConnection
 }
 
 type Mutation {
   createFeedback(text: String!): Feedback!
+  createFeedbacks(texts: [String!]!): [Feedback!]!
 }
 
 type Feedback implements Node {

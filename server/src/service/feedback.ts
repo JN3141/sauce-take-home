@@ -67,8 +67,8 @@ const getFeedback = async (id: number | bigint) => {
  * @param page The page number
  * @param perPage The number of entries per page
  */
-const getFeedbackPage = async (first: number, after?: number | bigint) => {
-  return await feedbackStore.getFeedbackPage(first, after);
+const getFeedbackPage = async (first: number, isAsc: boolean, cursor?: number | bigint) => {
+  return await feedbackStore.getFeedbackPage(first, isAsc, cursor);
 };
 
 export default {

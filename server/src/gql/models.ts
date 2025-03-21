@@ -3,10 +3,7 @@ import { z } from "zod";
 
 export type GraphQLNode = { id: string };
 
-const sauceGraphQLTypeSchema = z.union([
-  z.literal("Feedback"),
-  z.literal("Highlight"),
-]);
+const sauceGraphQLTypeSchema = z.enum(["Feedback", "Highlight"]);
 
 export type SauceGraphQLType = z.infer<typeof sauceGraphQLTypeSchema>;
 

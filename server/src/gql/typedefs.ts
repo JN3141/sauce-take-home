@@ -16,9 +16,19 @@ const typeDefs = /* GraphQL */ `
     endCursor: String
   }
 
+  enum SortDirection {
+    ASC
+    DESC
+  }
+
+  input SortInput {
+    field: String!
+    direction: SortDirection!
+  }
+
   type Query {
     feedback(id: ID!): Feedback
-    feedbacks(first: Int, after: String): FeedbackConnection
+    feedbacks(first: Int, after: String, sort: SortInput): FeedbackConnection
   }
 
   type Mutation {

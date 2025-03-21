@@ -17,19 +17,28 @@ const getFeedback = async (id: number | bigint) => {
 
 /**
  * Gets a page of feedback entries
- * @param page The page number
- * @param perPage The number of entries per page
+ * @param first the number of entries to return
+ * @param cursor the id following which to start fetching
+ * @param isAsc whether to sort in ascending order or not
  */
-const getFeedbackPage = async (first: number, after?: number | bigint) => {
-  return db
-    .prepare(
-      /* sql */ `SELECT *
+const getFeedbackPage = async (
+  first: number,
+  isAsc: boolean,
+  cursor?: number | bigint,
+) => {
+  const dbPreparedStatement = isAsc
+    ? db.prepare(/* sql */ `SELECT *
+               FROM Feedback
+               WHERE (?) IS NULL OR id > (?)
+               ORDER BY id ASC
+               LIMIT (?)`)
+    : db.prepare(/* sql */ `SELECT *
                  FROM Feedback
-                 WHERE (?) IS NULL OR id > (?)
-                 ORDER BY id ASC
-                 LIMIT (?)`
-    )
-    .all(after, after, first) as Feedback[];
+                 WHERE (?) IS NULL OR id < (?)
+                 ORDER BY id DESC
+                 LIMIT (?)`);
+
+  return dbPreparedStatement.all(cursor, cursor, first) as Feedback[];
 };
 
 /**

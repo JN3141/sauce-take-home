@@ -40,6 +40,29 @@ describe("HighightQueryResolverE2E", () => {
     },
   ];
 
+  const testQueryString = /* GraphQL */ `
+    query Feedbacks($first: Int, $after: String, $sort: SortInput) {
+      feedbacks(first: $first, after: $after, sort: $sort) {
+        edges {
+          node {
+            id
+            text
+            highlights {
+              id
+              quote
+              summary
+            }
+          }
+          cursor
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  `;
+
   beforeEach(() => {
     db.exec("DELETE FROM Highlight;");
     db.exec("DELETE FROM Feedback;");
@@ -142,10 +165,16 @@ describe("HighightQueryResolverE2E", () => {
 
     assertSingleValue(createResponse);
 
-    sauceFromGlobalIdOrThrow(createResponse.data.createFeedbacks[0].id, "Feedback");
+    sauceFromGlobalIdOrThrow(
+      createResponse.data.createFeedbacks[0].id,
+      "Feedback"
+    );
     expect(createResponse.data.createFeedbacks[0].text).toBe("Test feedback A");
 
-    sauceFromGlobalIdOrThrow(createResponse.data.createFeedbacks[1].id, "Feedback");
+    sauceFromGlobalIdOrThrow(
+      createResponse.data.createFeedbacks[1].id,
+      "Feedback"
+    );
     expect(createResponse.data.createFeedbacks[1].text).toBe("Test feedback B");
 
     await expect
@@ -161,30 +190,7 @@ describe("HighightQueryResolverE2E", () => {
       .toSatisfy(isMockHighlights);
   });
 
-  it("should return highlights correctly, with pagination", async () => {
-    const testQueryString = /* GraphQL */ `
-      query Feedbacks($first: Int, $after: String) {
-        feedbacks(first: $first, after: $after) {
-          edges {
-            node {
-              id
-              text
-              highlights {
-                id
-                quote
-                summary
-              }
-            }
-            cursor
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-        }
-      }
-    `;
-
+  it("should return highlights correctly in asc order, with pagination", async () => {
     await feedbackService.createFeedback("feedback A");
     await feedbackService.createFeedback("feedback B");
     await feedbackService.createFeedback("feedback C");
@@ -220,6 +226,53 @@ describe("HighightQueryResolverE2E", () => {
 
     expect(responseB.data?.feedbacks?.edges).toHaveLength(1);
     expect(responseB.data?.feedbacks?.edges[0].node?.text).toBe("feedback C");
+
+    expect(responseB.data?.feedbacks?.pageInfo?.hasNextPage).toBe(false);
+    expect(responseB.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseB.data?.feedbacks?.edges[0].cursor
+    );
+    expect(responseB.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseB.data?.feedbacks?.edges[0].node.id
+    );
+  });
+
+  it("should return highlights correctly in desc order, with pagination", async () => {
+    await feedbackService.createFeedback("feedback A");
+    await feedbackService.createFeedback("feedback B");
+    await feedbackService.createFeedback("feedback C");
+
+    const responseA = await executor({
+      document: parse(testQueryString),
+      variables: { first: 2, sort: { field: "id", direction: "DESC" } },
+    });
+
+    assertSingleValue(responseA);
+
+    expect(responseA.data?.feedbacks?.edges).toHaveLength(2);
+    expect(responseA.data?.feedbacks?.edges[0].node?.text).toBe("feedback C");
+    expect(responseA.data?.feedbacks?.edges[1].node?.text).toBe("feedback B");
+
+    expect(responseA.data?.feedbacks?.pageInfo?.hasNextPage).toBe(true);
+    expect(responseA.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseA.data?.feedbacks?.edges[1].cursor
+    );
+    expect(responseA.data?.feedbacks?.pageInfo?.endCursor).toBe(
+      responseA.data?.feedbacks?.edges[1].node.id
+    );
+
+    const responseB = await executor({
+      document: parse(testQueryString),
+      variables: {
+        first: 2,
+        after: responseA.data?.feedbacks?.pageInfo?.endCursor,
+        sort: { field: "id", direction: "DESC" },
+      },
+    });
+
+    assertSingleValue(responseB);
+
+    expect(responseB.data?.feedbacks?.edges).toHaveLength(1);
+    expect(responseB.data?.feedbacks?.edges[0].node?.text).toBe("feedback A");
 
     expect(responseB.data?.feedbacks?.pageInfo?.hasNextPage).toBe(false);
     expect(responseB.data?.feedbacks?.pageInfo?.endCursor).toBe(

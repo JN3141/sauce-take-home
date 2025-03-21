@@ -12,6 +12,12 @@ export const firstSchema = z.number().int().min(1).max(50).nullish();
 export type FirstType = z.infer<typeof firstSchema>;
 export const afterSchema = z.string().nonempty().nullish();
 export type AfterType = z.infer<typeof afterSchema>;
+// leave this as an object for now, so we can add more fields for sorting later if needed
+export const sortSchema = z.object({
+  field: z.enum(["id"]),
+  direction: z.enum(["ASC", "DESC"]),
+}).nullish();
+export type SortType = z.infer<typeof sortSchema>;
   
 export function connectionFromArrayWithDbIds<T extends { id: number | bigint }>(
   data: Array<T>,

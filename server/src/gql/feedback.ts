@@ -7,11 +7,10 @@ import {
   firstSchema,
   type FirstType,
   type AfterType,
+  SortType,
+  sortSchema,
 } from "./pagination";
-import {
-  sauceToGlobalId,
-  sauceFromGlobalIdOrThrow
-} from "./models";
+import { sauceToGlobalId, sauceFromGlobalIdOrThrow } from "./models";
 
 const feedbackTextSchema = z.string().nonempty();
 type FeedbackText = z.infer<typeof feedbackTextSchema>;
@@ -30,17 +29,20 @@ const getFeedback = async (parent: unknown, args: { id: string }) => {
 
 const getFeedbacks = async (
   parent: unknown,
-  args: { first: FirstType; after: AfterType }
+  args: { first: FirstType; after: AfterType; sort: SortType }
 ) => {
   const firstValidated = firstSchema.parse(args.first) ?? DEFAULT_FIRST;
   const afterValidated = args.after
     ? sauceFromGlobalIdOrThrow(args.after, "Feedback")
     : undefined;
+  const sortValidated = args.sort ? sortSchema.parse(args.sort) : undefined;
 
   const feedbacks = await feedbackService.getFeedbackPage(
     firstValidated + FIRST_SENTINEL,
-    afterValidated?.id
+    (sortValidated?.direction ?? "ASC") === "ASC",
+    afterValidated?.id,
   );
+  console.log("feedbacks", feedbacks);
 
   return connectionFromArrayWithDbIds(feedbacks, "Feedback", args);
 };
